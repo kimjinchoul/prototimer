@@ -5,7 +5,6 @@
 #include "afxdtctl.h"
 #include "afxwin.h"
 #include "afxcmn.h"
-#include "ocx1.h"
 
 
 // CProtoTimerDlg dialog
@@ -32,9 +31,9 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	CMonthCalCtrl m_calctrl;
-	CEdit m_timevalue;
-	CButton m_button;
+	//CMonthCalCtrl m_calctrl;
+	//CEdit m_timevalue;
+	//CButton m_button;
 	int m_seconds_max;
 	int m_seconds_cur;
 	bool m_bstart;
@@ -51,10 +50,11 @@ public:
 	CBitmap m_bmp[10];
 	CStatic m_picbox_sec_x0;
 	CStatic m_picbox_sec_0x;
-	COcx1 m_wmp;
 	NOTIFYICONDATA m_notify_icon;
 	afx_msg LRESULT OnNotifyIcon(WPARAM wParam,LPARAM IParam);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	bool m_bminmal;
 };
