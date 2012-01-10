@@ -5,6 +5,8 @@
 #include "ProtoTimer.h"
 #include "ProtoTimerDlg.h"
 
+#include "WMPDailog.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -12,7 +14,7 @@
 
 // CProtoTimerDlg dialog
 
-
+#define CONFIG_INI_NAME _T(".\\config.ini")
 
 
 CProtoTimerDlg::CProtoTimerDlg(CWnd* pParent /*=NULL*/)
@@ -25,14 +27,13 @@ CProtoTimerDlg::CProtoTimerDlg(CWnd* pParent /*=NULL*/)
 void CProtoTimerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_MONTHCALENDAR1, m_calctrl);
-	DDX_Control(pDX, IDC_EDIT1, m_timevalue);
-	DDX_Control(pDX, IDC_BUTTON1, m_button);
+	//DDX_Control(pDX, IDC_MONTHCALENDAR1, m_calctrl);
+	//DDX_Control(pDX, IDC_EDIT1, m_timevalue);
+	//DDX_Control(pDX, IDC_BUTTON1, m_button);
 	DDX_Control(pDX, IDC_STATIC_MIN_X0, m_picbox_min_x0);
 	DDX_Control(pDX, IDC_STATIC_MIN_0X, m_picbox_min_0x);
 	DDX_Control(pDX, IDC_STATIC_SEC_X0, m_picbox_sec_x0);
 	DDX_Control(pDX, IDC_STATIC_SEC_0X, m_picbox_sec_0x);
-	DDX_Control(pDX, IDC_OCX1, m_wmp);
 }
 
 BEGIN_MESSAGE_MAP(CProtoTimerDlg, CDialog)
@@ -44,8 +45,10 @@ BEGIN_MESSAGE_MAP(CProtoTimerDlg, CDialog)
 	ON_MESSAGE(WM_NC,OnNotifyIcon)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONDBLCLK()
 	//}}AFX_MSG_MAP
-	ON_BN_CLICKED(IDC_BUTTON1, &CProtoTimerDlg::OnBnClickedButton1)
+	//ON_BN_CLICKED(IDC_BUTTON1, &CProtoTimerDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -61,8 +64,8 @@ BOOL CProtoTimerDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	m_timevalue.SetWindowText(_T("25"));
-	m_button.SetWindowText(_T("Start"));
+	//m_timevalue.SetWindowText(_T("25"));
+	//m_button.SetWindowText(_T("Start"));
 
 	//Load bmp
 	m_bmp[0].LoadBitmap(MAKEINTRESOURCE(IDB_BITMAP_0));
@@ -76,10 +79,52 @@ BOOL CProtoTimerDlg::OnInitDialog()
 	m_bmp[8].LoadBitmap(MAKEINTRESOURCE(IDB_BITMAP_8));
 	m_bmp[9].LoadBitmap(MAKEINTRESOURCE(IDB_BITMAP_9));
 
+	m_picbox_min_x0.SetBitmap((HBITMAP)m_bmp[2]);
+	m_picbox_min_0x.SetBitmap((HBITMAP)m_bmp[5]);
+
+	m_picbox_sec_x0.SetBitmap((HBITMAP)m_bmp[0]);
+	m_picbox_sec_0x.SetBitmap((HBITMAP)m_bmp[0]);
+
 	m_whitebrush.CreateSolidBrush(RGB(255,255,255));
 
 	m_bminmal = false;
 
+	//Alpha dialog
+	SetWindowLong(this->GetSafeHwnd(),
+		GWL_EXSTYLE,
+		GetWindowLong(this->GetSafeHwnd(),
+		GWL_EXSTYLE)^0x80000);
+
+	//function pointer of SetLayeredWindowAttributes
+	typedef BOOL (WINAPI * LpfSetLayeredWindowAttributes)(HWND, COLORREF, BYTE, DWORD);
+	LpfSetLayeredWindowAttributes lpfSetLayeredWindowAttributes = NULL;
+	HINSTANCE hInst = LoadLibrary(_T("User32.DLL"));
+	//Color which will be alpha
+	COLORREF clr(RGB(0, 0, 0));
+
+	if (hInst)
+	{
+		lpfSetLayeredWindowAttributes = (LpfSetLayeredWindowAttributes)GetProcAddress(
+			hInst, "SetLayeredWindowAttributes");
+		if (lpfSetLayeredWindowAttributes) {
+			lpfSetLayeredWindowAttributes(
+				this->GetSafeHwnd(),
+				clr,
+				200,
+				LWA_ALPHA);
+		}
+		FreeLibrary(hInst);
+	}
+
+	//Move windows
+	int x = GetPrivateProfileInt(_T("ProtoTimer"),
+		_T("X"),0,CONFIG_INI_NAME);
+	int y = GetPrivateProfileInt(_T("ProtoTimer"),
+		_T("Y"),0,CONFIG_INI_NAME);
+	CRect rect;
+	GetWindowRect(&rect);
+	MoveWindow(x,y,rect.Width(),rect.Height());
+	
 	//////////////////////////////////////////////////////////////////////////
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -128,28 +173,34 @@ void CProtoTimerDlg::OnBnClickedButton1()
 	if (m_bstart)
 	{
 		KillTimer(0);
-		m_button.SetWindowText(_T("Start"));
-		m_timevalue.EnableWindow(TRUE);
+		//m_button.SetWindowText(_T("Start"));
+		//m_timevalue.EnableWindow(TRUE);
+		m_picbox_min_x0.SetBitmap((HBITMAP)m_bmp[2]);
+		m_picbox_min_0x.SetBitmap((HBITMAP)m_bmp[5]);
+
+		m_picbox_sec_x0.SetBitmap((HBITMAP)m_bmp[0]);
+		m_picbox_sec_0x.SetBitmap((HBITMAP)m_bmp[0]);
 		m_bstart = false;
 	}
 	else
 	{
 		CString strTmp;
-		m_timevalue.GetWindowText(strTmp);
-		if (strTmp.GetLength() > 0)
-		{
-			m_seconds_max = _wtoi(strTmp.GetBuffer()) * 60;
-		}
-		else
-		{
-			m_seconds_max = 25 * 60;
-		}
+		//m_timevalue.GetWindowText(strTmp);
+		//if (strTmp.GetLength() > 0)
+		//{
+		//	m_seconds_max = _wtoi(strTmp.GetBuffer()) * 60;
+		//}
+		//else
+		//{
+		//	m_seconds_max = 25 * 60;
+		//}
+		m_seconds_max = 25 * 60;
 
 		m_seconds_cur = 0;
 
 		m_bstart = true;
-		m_button.SetWindowText(_T("Stop"));
-		m_timevalue.EnableWindow(FALSE);
+		//m_button.SetWindowText(_T("Stop"));
+		//m_timevalue.EnableWindow(FALSE);
 		OnTimer(0);
 		SetTimer(0, 1000, NULL);
 	}
@@ -204,11 +255,12 @@ void CProtoTimerDlg::OnTimer(UINT_PTR nID)
 
 		if (m_seconds_cur >= m_seconds_max)
 		{
-			m_wmp.put_URL(_T("alert.mp3"));
+			CWMPDailog dlg;
 			KillTimer(0);
-			m_button.SetWindowText(_T("Start"));
-			m_timevalue.EnableWindow(TRUE);
-			m_bstart = false;
+
+			dlg.DoModal();
+			
+			OnBnClickedButton1();
 
 			if (m_bminmal)
 			{
@@ -242,8 +294,8 @@ LRESULT CProtoTimerDlg::OnNotifyIcon(WPARAM wParam,LPARAM IParam)
 	if ((IParam == WM_LBUTTONDOWN) || (IParam == WM_RBUTTONDOWN))
 	{ 
 		ShowWindow(SW_SHOWNORMAL);
-		BringWindowToTop();
-		Shell_NotifyIcon(NIM_DELETE, &m_notify_icon);
+		SetForegroundWindow();
+		//Shell_NotifyIcon(NIM_DELETE, &m_notify_icon);
 		m_bminmal = false;
 	}
 
@@ -254,14 +306,14 @@ void CProtoTimerDlg::OnSize(UINT nType, int cx, int cy)
 {
 	if (nType == SIZE_MINIMIZED)
 	{
-		//Icon to tray
-		m_notify_icon.cbSize = sizeof(NOTIFYICONDATA);
-		m_notify_icon.hIcon  = AfxGetApp()->LoadIcon(IDI_ICON1);
-		m_notify_icon.hWnd   = m_hWnd;
-		lstrcpy(m_notify_icon.szTip, _T("ProtoTimer!"));
-		m_notify_icon.uCallbackMessage = WM_NC;
-		m_notify_icon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-		Shell_NotifyIcon(NIM_ADD, &m_notify_icon);
+		////Icon to tray
+		//m_notify_icon.cbSize = sizeof(NOTIFYICONDATA);
+		//m_notify_icon.hIcon  = AfxGetApp()->LoadIcon(IDI_ICON1);
+		//m_notify_icon.hWnd   = m_hWnd;
+		//lstrcpy(m_notify_icon.szTip, _T("ProtoTimer!"));
+		//m_notify_icon.uCallbackMessage = WM_NC;
+		//m_notify_icon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+		//Shell_NotifyIcon(NIM_ADD, &m_notify_icon);
 		m_bminmal = true;
 
 		ShowWindow(SW_HIDE);
@@ -272,8 +324,31 @@ void CProtoTimerDlg::OnSize(UINT nType, int cx, int cy)
 
 void CProtoTimerDlg::OnDestroy()
 {
-	if (m_bminmal)
-	{
-		Shell_NotifyIcon(NIM_DELETE, &m_notify_icon);
-	}	
+	CRect rect;
+	CString strTmp;
+	//if (m_bminmal)
+	//{
+	//	  Shell_NotifyIcon(NIM_DELETE, &m_notify_icon);
+	//}
+	GetWindowRect(&rect);
+
+	strTmp.Format(_T("%d"), rect.left);
+	WritePrivateProfileString(_T("ProtoTimer"),
+		_T("X"), strTmp.GetBuffer(), CONFIG_INI_NAME);
+
+	strTmp.Format(_T("%d"), rect.top);
+	WritePrivateProfileString(_T("ProtoTimer"),
+		_T("Y"), strTmp.GetBuffer(), CONFIG_INI_NAME);
+}
+
+void CProtoTimerDlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(point.x, point.y));
+	CDialog::OnLButtonDown(nFlags, point);
+}
+
+void CProtoTimerDlg::OnLButtonDblClk(UINT nFlags, CPoint point)
+{
+	OnBnClickedButton1();
+	CDialog::OnRButtonDown(nFlags, point);
 }
