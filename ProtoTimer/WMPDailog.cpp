@@ -10,10 +10,10 @@
 
 IMPLEMENT_DYNAMIC(CWMPDailog, CDialog)
 
-CWMPDailog::CWMPDailog(CWnd* pParent /*=NULL*/)
+CWMPDailog::CWMPDailog(CWnd* pParent /*=NULL*/, CString m_mp3path)
 	: CDialog(CWMPDailog::IDD, pParent)
 {
-
+	this->m_mp3path = m_mp3path;
 }
 
 CWMPDailog::~CWMPDailog()
@@ -29,7 +29,7 @@ void CWMPDailog::DoDataExchange(CDataExchange* pDX)
 BOOL CWMPDailog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	m_wmp.put_URL(_T("alert.mp3"));
+	m_wmp.put_URL(this->m_mp3path);
 	return TRUE;
 }
 

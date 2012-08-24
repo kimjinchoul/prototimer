@@ -13,7 +13,7 @@ class CWMPDailog : public CDialog
 	DECLARE_DYNAMIC(CWMPDailog)
 
 public:
-	CWMPDailog(CWnd* pParent = NULL);   // standard constructor
+	CWMPDailog(CWnd* pParent = NULL, CString m_mp3path = _T("alert.mp3"));   // standard constructor
 	virtual ~CWMPDailog();
 
 // Dialog Data
@@ -26,4 +26,5 @@ protected:
 
 public:
 	COcx1 m_wmp;
+	CString m_mp3path;
 };

@@ -314,6 +314,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\none.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\ProtoTimer.ico"
 				>
 			</File>
